@@ -70,3 +70,16 @@ span.category {
     vertical-align: middle;
     margin-left: 0.5rem;
 }
+
+
+.dep_line {
+    white-space: pre;
+    tab-size: 7;
+}
+
+.header_title {
+    color: #101010;
+    font-weight: bold;
+    margin-top: 2px;
+    margin-bottom: 5px;
+}

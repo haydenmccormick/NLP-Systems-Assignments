@@ -11,10 +11,12 @@
     <p>Processing results:</p>
 
     <div>
+      <p class=header_title>Entities:</p><br>
       {{ markup | safe }}
     </div>
     
     <div>
+      <p class=header_title>Dependencies:</p><br>
       {{ dep | safe }}
     </div>
 
@@ -23,10 +25,3 @@
   </body>
 
 </html>
-
-<style>
-    .dep_line {
-        white-space: pre;
-        tab-size: 4;
-    }
-</style>
