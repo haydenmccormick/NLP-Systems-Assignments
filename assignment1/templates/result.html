@@ -1,0 +1,32 @@
+<html>
+
+  <head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"/>
+  </head>
+
+  <body>
+
+    <h2>spaCy entity parsing</h2>
+
+    <p>Processing results:</p>
+
+    <div>
+      {{ markup | safe }}
+    </div>
+    
+    <div>
+      {{ dep | safe }}
+    </div>
+
+    <p><a href="">back to form</a></p>
+
+  </body>
+
+</html>
+
+<style>
+    .dep_line {
+        white-space: pre;
+        tab-size: 4;
+    }
+</style>
