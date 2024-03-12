@@ -1,45 +1,57 @@
-import sqlite3
 
-class EntityDatabase():
-    def __init__(self):
-        self.conn = sqlite3.connect("entities.db", check_same_thread=False)
-        self.cursor = self.conn.cursor()
-        # Format: | ID | Relation | Count |
-        self.cursor.execute("CREATE TABLE IF NOT EXISTS relations (id INTEGER PRIMARY KEY AUTOINCREMENT, relation TEXT, count INTEGER)")
-        # Format: | Entity | Relations | Count |
-        # ...where Relations is a list of relation ids the entity is involved in
-        self.cursor.execute("CREATE TABLE IF NOT EXISTS entities (entity TEXT PRIMARY KEY, relations TEXT, count INTEGER)")
+def define_models(db):
+    """
+    Define tables in SQLite database
+    """
+    class Relation(db.Model):
+        id = db.Column(db.Integer, primary_key=True)
+        relation = db.Column(db.String(100), unique=True, nullable=False)
+        count = db.Column(db.Integer, nullable=False)
+
+    class Entity(db.Model):
+        id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+        entity = db.Column(db.String(100), unique=True, nullable=False)
+        relations = db.Column(db.String(1000), nullable=True)
+        count = db.Column(db.Integer, nullable=False)
+
+    return Relation, Entity
+
+
+class EntityDatabase:
+    def __init__(self, db, app):
+        self.db = db
+        self.Relation, self.Entity = define_models(db)
+        with app.app_context():
+            self.db.create_all()
 
     def upload_relation(self, relation):
         """
         Upload relation with unique id, and return id for entity linking
         """
-        self.cursor.execute("SELECT count FROM relations WHERE relation=?", (relation,))
-        count = self.cursor.fetchone()
-        if count:
-            count = count[0]
-            self.cursor.execute("UPDATE relations SET count = count + 1 WHERE relation=?", (relation,))
+        relation_obj = self.Relation.query.filter_by(relation=relation).first()
+        if relation_obj:
+            relation_obj.count += 1
         else:
-            self.cursor.execute("INSERT INTO relations (relation, count) VALUES (?, 1)", (relation,))
-        self.conn.commit()
-        # Return the ID of the currently selected row
-        return self.cursor.lastrowid
+            relation_obj = self.Relation(relation=relation, count=1)
+            self.db.session.add(relation_obj)
+        self.db.session.commit()
+        return relation_obj.id
 
-    def upload_entity(self, entity, relation_id):
+    def upload_entity(self, entity_name, relation_id):
         """
         Upload entity or add relation_id to associated relations
         """
-        self.cursor.execute("SELECT relations FROM entities WHERE entity=?", (entity,))
-        relations = self.cursor.fetchone()
-        if relations:
-            if relation_id in relations[0].split(", "):
-                relations = relations
-            else:
-                relations = f"{relations[0]}, {relation_id}"
-            self.cursor.execute("UPDATE entities SET relations = ?, count = count + 1 WHERE entity=?", (relations, entity))
+        entity = self.Entity.query.filter_by(entity=entity_name).first()
+        if entity:
+            relation_ids = [int(id) for id in entity.relations.split(', ')] if entity.relations else []
+            if relation_id not in relation_ids:
+                relation_ids.append(relation_id)
+                entity.relations = ', '.join(str(id) for id in relation_ids)
+            entity.count += 1
         else:
-            self.cursor.execute("INSERT INTO entities (entity, relations, count) VALUES (?, ?, 1)", (entity, relation_id))
-        self.conn.commit()
+            entity = self.Entity(entity=entity_name, relations=str(relation_id), count=1)
+            self.db.session.add(entity)
+        self.db.session.commit()
 
     def get_entities_and_relations(self):
         """
@@ -47,18 +59,15 @@ class EntityDatabase():
         {entity: {count: int, relations: [{relation: str, count: int}, ...]}, ...}
         """
         entity_dict = {}
-        self.cursor.execute("SELECT * FROM entities")
-        entities = self.cursor.fetchall()
-        for entity, relations, count in entities:
-            entity_dict[entity] = {"count": count}
-            relation_ids = "(" + relations + ")"
-            self.cursor.execute(f"SELECT relation, count FROM relations WHERE id IN {relation_ids}")
-            relations = self.cursor.fetchall()
-            relations = [{"relation": relation[0], "count": relation[1]} for relation in relations]
-            entity_dict[entity]["relations"] = relations
+        entities = self.Entity.query.all()
+        for entity in entities:
+            entity_dict[entity.entity] = {"count": entity.count}
+            relation_ids = [int(id) for id in entity.relations.split(', ')] if entity.relations else []
+            relations = [self.Relation.query.filter_by(id=id).first() for id in relation_ids]
+            entity_dict[entity.entity]["relations"] = [{"relation": relation.relation, "count": relation.count} for relation in relations]
         return entity_dict
-    
+
     def delete_all(self):
-        self.cursor.execute("DELETE FROM relations")
-        self.cursor.execute("DELETE FROM entities")
-        self.conn.commit()
+        self.Relation.query.delete()
+        self.Entity.query.delete()
+        self.db.session.commit()

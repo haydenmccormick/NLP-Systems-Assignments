@@ -10,12 +10,15 @@ import sqlite3
 
 import ner
 from sqlite_helpers import EntityDatabase
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-sqlite_server = EntityDatabase()
 
-# For the website we use the regular Flask functionality and serve up HTML pages.
+# Database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///entities.db'
+db = SQLAlchemy(app)
 
+# Routes
 @app.route('/', methods=['GET'])
 def index():
     return render_template('form.html', input=open('input.txt').read())
@@ -54,4 +57,5 @@ def delete_all():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    sqlite_server = EntityDatabase(db, app)
+    app.run(debug=True,port=5555)

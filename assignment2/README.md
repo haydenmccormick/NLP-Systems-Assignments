@@ -15,7 +15,7 @@ pip install -r requirements.txt
 ## The Flask server
 To start:
 ```bash
-python app_flask.py
+python app.py
 ```
 
 Navigate to `http://localhost:5000` in a web browser to use the service. 
