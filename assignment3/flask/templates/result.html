@@ -1,0 +1,27 @@
+<html>
+
+  <head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"/>
+  </head>
+
+  <body>
+
+    <h2><a href="/" style="text-decoration: none;">spaCy entity parsing</h2></a>
+
+    <p>Processing results:</p>
+
+    <div>
+      <p class=header_title>Entities:</p><br>
+      {{ markup | safe }}
+    </div>
+    
+    <div>
+      <p class=header_title>Dependencies:</p><br>
+      {{ dep | safe }}
+    </div>
+
+    <p><a href="/">back to form</a></p>
+
+  </body>
+
+</html>

@@ -1,0 +1,45 @@
+<h2><a href="/" style="text-decoration: none;">spaCy entity parsing</h2></a>
+
+<table border="1" cellpadding="10" style="border-collapse: collapse; font-family: Arial, sans-serif;">
+    <thead style="background-color: #f2f2f2;">
+        <tr>
+            <th>Entity</th>
+            <th>Count</th>
+            <th>Relations</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for entity, info in entities.items() %}
+            <tr>
+                <td style="font-weight: bold;">{{ entity }}</td>
+                <td>{{ info['count'] }}</td>
+                <td>
+                    {% for relation in info['relations'] %}
+                        <p style="display: flex; justify-content: space-between;">
+                            <span>{{ relation['relation'] }}</span>
+                            <span style="margin-left: 10px;">({{ relation['count'] }})</span>
+                        </p>                    
+                    {% endfor %}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<br>
+
+<button onclick="confirmDelete()">Delete all entries</button>
+<p><a href="/">back to form</a></p>
+
+<script>
+    function confirmDelete() {
+        if (confirm("Are you sure you want to delete all entries?")) {
+            fetch('/delete_all', {
+                method: 'POST'
+            })
+            .then(response => {
+                window.location.replace("/")
+            });
+        }
+    }
+</script>

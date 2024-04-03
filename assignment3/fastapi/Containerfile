@@ -1,0 +1,15 @@
+# If passed a base image from a containerfile, it will use that
+# to save on storage space. Otherwise, build from scratch.
+ARG BASE_IMAGE=python:3.9-slim
+FROM ${BASE_IMAGE}
+
+WORKDIR /app
+
+COPY fastapi/requirements.txt .
+COPY ner.py .
+
+RUN pip install -r requirements.txt
+
+COPY fastapi/app_fastapi.py .
+
+CMD ["uvicorn", "app_fastapi:app", "--host", "0.0.0.0", "--port", "8000"]

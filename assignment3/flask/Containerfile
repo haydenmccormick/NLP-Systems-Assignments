@@ -1,0 +1,14 @@
+# If passed a base image from a containerfile, it will use that
+# to save on storage space. Otherwise, build from scratch.
+ARG BASE_IMAGE=python:3.9-slim
+FROM ${BASE_IMAGE}
+
+WORKDIR /app
+
+# Copy all the files from the flask directory to the /app directory
+COPY flask/ .
+COPY ner.py .
+
+RUN pip install -r requirements.txt
+
+CMD ["python", "app_flask.py"]
